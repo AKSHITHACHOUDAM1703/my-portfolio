@@ -25,8 +25,14 @@ if (fs.existsSync(envPath)) {
 
 mongoose.set("bufferCommands", false);
 
-mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("MongoDB Connected"))
-.catch(err => console.log("DB Error:", err));
+if (!process.env.MONGO_URI) {
+  console.log("DB Error: MONGO_URI is missing. Add it to a .env file before submitting the contact form.");
+} else {
+  mongoose.connect(process.env.MONGO_URI, {
+    serverSelectionTimeoutMS: 10000,
+  })
+    .then(() => console.log("MongoDB Connected"))
+    .catch((err) => console.log("DB Error:", err.message));
+}
 
 module.exports = mongoose;

@@ -1,26 +1,64 @@
-document
-  .getElementById("contactForm")
-  .addEventListener("submit", async function (e) {
+const contactForm = document.getElementById("contactForm");
 
+function showMessage(message, type) {
+  let popup = document.getElementById("popupMessage");
+
+  if (!popup) {
+    popup = document.createElement("div");
+    popup.id = "popupMessage";
+    document.body.appendChild(popup);
+  }
+
+  popup.textContent = message;
+  popup.className = type === "success" ? "success" : "error";
+  popup.style.display = "block";
+
+  clearTimeout(window.popupTimer);
+  window.popupTimer = setTimeout(() => {
+    popup.style.display = "none";
+  }, 3000);
+}
+
+if (contactForm) {
+  contactForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const data = {
-      name: document.getElementById("name").value,
-      email: document.getElementById("email").value,
-      message: document.getElementById("message").value,
-    };
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const message = document.getElementById("message").value.trim();
 
-    const response = await fetch("http://localhost:3000/contact", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
+    if (!name || !email || !message) {
+      showMessage("Please fill in all fields", "error");
+      return;
+    }
 
-    const result = await response.text();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    alert(result);
+    if (!emailRegex.test(email)) {
+      showMessage("Please enter a valid email", "error");
+      return;
+    }
 
-    document.getElementById("contactForm").reset();
-});
+    try {
+      const response = await fetch("/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, message }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        showMessage("Message sent successfully!", "success");
+        contactForm.reset();
+      } else {
+        showMessage(data.message || "Error saving message", "error");
+      }
+    } catch (err) {
+      console.log(err);
+      showMessage("Server Error", "error");
+    }
+  });
+}

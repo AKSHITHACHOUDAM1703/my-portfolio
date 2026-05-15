@@ -7,12 +7,17 @@ const mongoose = require("./db");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const publicDir = path.join(__dirname, "public");
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(publicDir));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(publicDir, "index.html"));
+});
 
 app.post("/contact", async (req, res) => {
   try {
